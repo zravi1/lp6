@@ -1,57 +1,28 @@
-#include<iostream>
-#include<omp.h>
-#include<bits/stdc++.h>
-using namespace std;
+#include <iostream>
+#include <vector>
+#include <omp.h>
 
-void swap(int& A, int &B){
-    int temp = A;
-    A= B;
-    B= temp;
+void pbs(std::vector<int>& arr){
+    int n = arr.size();
+    bool swapped = true;
+    #pragma omp parallel num_threads(n);
+    { while(swapped){
+        swapped = false;
+        #pragma omp for;
+        for(int i=0;i<n-1;i++){
+            if(arr[i]>arr[i+1]){
+                #pragma critical;
+                std::swap(arr[i],arr[i+1]);
+                swapped = true;}
+        }
+    }
+    }
 }
 
- void parallel_bubblesort(int array[], int n){
-    int temp[n];
-    for(int i =0; i <n ; i++){
-        temp[i]=array[i];
-
+int main(){
+    std::vector<int> arr = {9,8,7,6,5,4,3,2,1};
+    for (int num : arr)
+        std::cout<<num<<" ";
+    std::cout<<std::endl;
+    return 0;
     }
-    for(int i =0; i <n ; i++){
-        if(i %2==0){
-            #pragma omp parallel for
-            for(int j =1; j<n ; j =j+2){
-                if(temp[j]>temp[j+1]){
-                    swap(temp[j],temp[j+1]);
-                }
-            }
-        }
-        else{
-            #pragma omp parallel for
-        for(int j =0; j<n ; j =j+2){
-                if(temp[j]>temp[j+1]){
-                    swap(temp[j],temp[j+1]);
-                }
-            }
-        }
-    }
-    for(int i =0; i <n ;i++){
-        cout<<temp[i]<<" ";
-    }
- }
-
-  int main (){
-
-    int n;
-    cout<<"Enter the size of the array : ";
-    cin>>n;
-    int array[n];
-    cout<<"Enter the elements in the array : ";
-    
-    for(int i =0; i <n; i ++){
-        cin>>array[i];
-
-    }
-
-    parallel_bubblesort(array, n);
-
-    return 0 ;
-  }
