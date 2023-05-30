@@ -1,59 +1,35 @@
-#include<iostream>
-#include<omp.h>
-#include<bits/stdc++.h>
-using namespace std;
-
-vector<vector<int>> graph;
-vector<bool> visited ;
-
-void parallel_bfs(int v ){
-    queue<int> s;
-    s.push(v);
-    visited[v]=true;
-
-    while(s.empty()==false){
-
-        int curr = s.front();
-        cout<<curr<<" ";
-        s.pop();
-
-        #pragma omp parallel for
-        for(int i =0; i <graph[curr].size(); i++){
-            int child = graph[curr][i];
-            if(visited[child]==false){
-                visited[child]=true;
-                s.push(child);
-            }
-        }
-    }
-}
-
-
-int main (){
-
-    int v, e;
-     cout<<"Vertices : ";
-     cin>>v;
-     cout<<"Edges : ";
-     cin>>e;
-     
-     graph.resize(v);
-     visited.resize(v);
-
-     int x,y;
-     for(int i =0 ; i <e ; i++){
-        cin>>x>>y;
-        graph[x].push_back(y);
-        graph[y].push_back(x);
-     }
-
-     for(int i =0 ; i <v; i++){
-        visited[i]=false;
-     }
-
-     parallel_bfs(0);
-
-
-    return 0;
-
-}
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <omp.h>
+void parallelBFS(std::vector<std::vector<int>>& graph, int startNode, std::vector<bool>& visited) {
+    std::queue<int> bfsQueue;
+    bfsQueue.push(startNode);
+    visited[startNode] = true;
+    #pragma omp parallel num_threads(MAX_THREADS)
+    {while (!bfsQueue.empty()) {
+            int currentNode;
+            #pragma omp critical
+            { currentNode = bfsQueue.front();
+                bfsQueue.pop(); }
+            #pragma omp for
+            for (int neighbor : graph[currentNode]) {
+                #pragma omp critical
+                {if (!visited[neighbor]) {
+                        visited[neighbor] = true;
+                        bfsQueue.push(neighbor);}}}}}}
+int main() {
+    std::vector<std::vector<int>> graph = {
+        {1, 2},        // Node 0
+        {0, 2, 3, 4},  // Node 1
+        {0, 1, 4},     // Node 2
+        {1},           // Node 3
+        {1, 2}         // Node 4
+    };
+    int startNode = 0;
+    std::vector<bool> visited(graph.size(), false);
+    parallelBFS(graph, startNode, visited);
+    for (int i = 0; i < visited.size(); i++) {
+        if (visited[i]) {
+            std::cout << "Node " << i << " was visited." << std::endl; }}
+    return 0;}
